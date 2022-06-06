@@ -9,12 +9,20 @@ import java.util.TimeZone;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import me.hajoo.jacksonexamples._6_general._1_JsonProperty.MyBean;
 import me.hajoo.jacksonexamples._6_general._2_JsonFormat.EventWithFormat;
 import me.hajoo.jacksonexamples._6_general._3_JsonUnwrapped.UnwrappedUser;
 import me.hajoo.jacksonexamples._6_general._4_JsonView.Item;
 import me.hajoo.jacksonexamples._6_general._4_JsonView.Views;
+import me.hajoo.jacksonexamples._6_general._5_JsonManagedReference_JsonBackReference.ItemWithRef;
+import me.hajoo.jacksonexamples._6_general._5_JsonManagedReference_JsonBackReference.UserWithRef;
+import me.hajoo.jacksonexamples._6_general._6_JsonIdentityInfo.ItemWithIdentity;
+import me.hajoo.jacksonexamples._6_general._6_JsonIdentityInfo.UserWithIdentity;
+import me.hajoo.jacksonexamples._6_general._7_JsonFilter.BeanWithFilter;
+import me.hajoo.jacksonexamples._6_general._8_JacksonAnnotationInside.BeanWithCustomAnnotation;
 
 public class GeneralTest {
 
@@ -75,5 +83,59 @@ public class GeneralTest {
 		assertTrue(result.equals("{\"id\":2,\"itemName\":\"book\"}"));
 		assertTrue(result2.equals("{\"itemName\":\"book\",\"ownerName\":\"John\"}"));
 		assertTrue(result3.equals("{\"id\":2,\"itemName\":\"book\",\"ownerName\":\"John\"}"));
+	}
+
+	@Test
+	public void JsonManagedReference_JsonBackReference() throws Exception {
+	    // given
+		final UserWithRef user = new UserWithRef(1, "John");
+		final ItemWithRef item = new ItemWithRef(2, "book", user);
+		user.addItem(item);
+		// when
+		final String result = objectMapper.writeValueAsString(item);
+		// then
+		assertTrue(result.contains("book"));
+		assertTrue(result.contains("2"));
+		assertFalse(result.contains("userItems"));
+	}
+
+	@Test
+	public void JsonIdentityInfo() throws Exception {
+	    // given
+		final UserWithIdentity user = new UserWithIdentity(1, "John");
+		final ItemWithIdentity item = new ItemWithIdentity(2, "book", user);
+		user.addItem(item);
+		// when
+		final String result = objectMapper.writeValueAsString(item);
+		// then
+		assertTrue(result.contains("book"));
+		assertTrue(result.contains("John"));
+		assertTrue(result.contains("userItems"));
+	}
+
+	@Test
+	public void JsonFilter() throws Exception {
+	    // given
+		final BeanWithFilter bean = new BeanWithFilter(1, "My bean");
+
+		final SimpleFilterProvider filters = new SimpleFilterProvider().addFilter("myFilter",
+			SimpleBeanPropertyFilter.filterOutAllExcept("name"));
+		// when
+		final String result = objectMapper.writer(filters)
+			.writeValueAsString(bean);
+		// then
+		assertTrue(result.contains("My bean"));
+		assertFalse(result.contains("id"));
+	}
+	
+	@Test
+	public void JacksonAnnotationsInside() throws Exception {
+	    // given
+		final BeanWithCustomAnnotation bean = new BeanWithCustomAnnotation(1, "My bean", null);
+		// when
+		final String result = objectMapper.writeValueAsString(bean);
+		// then
+		assertTrue(result.equals("{\"name\":\"My bean\",\"id\":1}"));
+		assertFalse(result.contains("dateCreated"));
 	}
 }
