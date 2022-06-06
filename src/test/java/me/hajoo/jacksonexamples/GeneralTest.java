@@ -8,10 +8,14 @@ import java.util.TimeZone;
 
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
+import me.hajoo.jacksonexamples._4_jacksonProperty._03_JsonIgnoreType.User;
+import me.hajoo.jacksonexamples._6_general._10_Disable.MyBean2;
 import me.hajoo.jacksonexamples._6_general._1_JsonProperty.MyBean;
 import me.hajoo.jacksonexamples._6_general._2_JsonFormat.EventWithFormat;
 import me.hajoo.jacksonexamples._6_general._3_JsonUnwrapped.UnwrappedUser;
@@ -23,6 +27,8 @@ import me.hajoo.jacksonexamples._6_general._6_JsonIdentityInfo.ItemWithIdentity;
 import me.hajoo.jacksonexamples._6_general._6_JsonIdentityInfo.UserWithIdentity;
 import me.hajoo.jacksonexamples._6_general._7_JsonFilter.BeanWithFilter;
 import me.hajoo.jacksonexamples._6_general._8_JacksonAnnotationInside.BeanWithCustomAnnotation;
+import me.hajoo.jacksonexamples._6_general._9_MinIn.Item2;
+import me.hajoo.jacksonexamples._6_general._9_MinIn.MyMixInForIgnoreType;
 
 public class GeneralTest {
 
@@ -137,5 +143,32 @@ public class GeneralTest {
 		// then
 		assertTrue(result.equals("{\"name\":\"My bean\",\"id\":1}"));
 		assertFalse(result.contains("dateCreated"));
+	}
+
+	@Test
+	public void MinInMethod() throws Exception {
+	    // given
+		final Item2 item = new Item2(1, "book", null);
+		// when, then
+		final String result = objectMapper.writeValueAsString(item);
+		assertTrue(result.contains("owner"));
+
+		final ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.addMixIn(User.class, MyMixInForIgnoreType.class);
+
+		final String result2 = objectMapper.writeValueAsString(item);
+		assertFalse(result2.contains("owner"));
+	}
+
+	@Test
+	public void Disable() throws Exception {
+	    // given
+		final ObjectMapper objectMapper = new ObjectMapper();
+		final MyBean2 bean = new MyBean2(1, null);
+		// when
+		objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
+		final String result = objectMapper.writeValueAsString(bean);
+		// then
+		System.out.println(result);
 	}
 }
