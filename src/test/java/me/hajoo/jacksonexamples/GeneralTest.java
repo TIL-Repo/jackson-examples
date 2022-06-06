@@ -169,6 +169,6 @@ public class GeneralTest {
 		objectMapper.disable(MapperFeature.USE_ANNOTATIONS);
 		final String result = objectMapper.writeValueAsString(bean);
 		// then
-		System.out.println(result);
+		assertTrue(result.equals("{\"id\":1,\"name\":null}"));
 	}
 }
